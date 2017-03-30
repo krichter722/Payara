@@ -1,0 +1,19 @@
+language: java
+sudo: false
+# specifying other dists doesn't make sense because `trusty` doesn't have `oraclejdk8` (fails due to `Sorry, but JDK '[oraclejdk8]' is not known.`) which is the only supported JDK currently. Testing on Mac OSX doesn't make too much sense since it will run the same `maven` based build routine.
+
+jdk:
+- oraclejdk8
+- openjdk8
+
+env:
+- MAVEN_OPTS="-Xmx24g -Xms2g -XX:-UseGCOverheadLimit"
+# avoid `GC overhead limit exceeded` (still occurs with `-Xmx12g`)
+
+install: /bin/true
+before_script: /bin/true
+
+script:
+- travis_wait 60 sh -c 'mvn --batch-mode --show-version install -DskipTests=true -Dmaven.javadoc.skip=true &> /tmp/install.log || (tail -n 10000 /tmp/install.log && exit 1)'
+- travis_wait 60 sh -c 'mvn --batch-mode test verify &> /tmp/verify.log || ( tail -n 10000 /tmp/verify.log && exit 1 )'
+    # avoid exceeding the Travis CI build log limit of 4MB
